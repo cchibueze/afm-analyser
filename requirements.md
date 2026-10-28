@@ -11,14 +11,14 @@
 ## 2. Inputs and operator requests
 
 - **REQ-010 — Image data file:** The program shall accept a `.csv` file containing metadata in its first lines, followed by the 2D height matrix, with each matrix row represented by a line.
-- **REQ-011 — Image metadata:** The metadata shall describe image width and height in pixels and physical length units, and state the units used for height data.
-- **REQ-012 — Supported height units:** The input may specify nanometers, meters, or other stated units.
+- **REQ-011 — Image metadata:** The metadata shall describe image width and height in pixels and physical length units, and state a declared unit that applies to both physical image dimensions and height data.
+- **REQ-012 — Supported input units:** The initial production implementation shall support meters and nanometers for physical image dimensions and height data.
 - **REQ-013 — Request file:** The initial version shall accept operator requests through a `.inp` text file containing lines with keywords and optional specifications.
 - **REQ-014 — Feature requests:** The request file shall allow the operator to specify wanted feature types and feature-specific thresholds.
 - **REQ-015 — Output requests:** The request file shall allow the operator to request output detail, plots, inclusion of analysis details in the results file, and result measurement units where applicable.
 - **REQ-016 — Feature default:** If feature types are omitted, the program shall look for trenches only.
-- **REQ-017 — Default trench thresholds:** Unless overridden, the trench thresholds shall be 5 nm depth, 4 nm width, and 5 nm length.
-- **REQ-018 — Default bump and pit thresholds:** Unless overridden, bump and pit thresholds shall be 4 nm for height or depth and 4 nm for diameter.
+- **REQ-017 — Default trench thresholds:** Unless overridden, the trench thresholds shall be 5 nm depth, 3 nm width, and 6 nm length. The requested trench length threshold shall be at least 1.5 times the requested trench width threshold.
+- **REQ-018 — Default bump and pit thresholds:** Unless overridden, bump thresholds shall be 4 nm minimum height and 4 nm diameter; pit thresholds shall be 4 nm minimum depth and 4 nm diameter.
 - **REQ-019 — Defaults:** The program shall apply documented defaults when optional requests are omitted.
 
 ## 3. Feature definitions and measurements
@@ -55,12 +55,13 @@
 - **REQ-050 — Project workflow:** The project shall support a workflow of cloning the GitHub repository, installing the required Python environment, running tests with `pytest`, and running an operator-requested analysis through a CLI in a terminal or IDE.
 - **REQ-051 — Machine independence:** The initial version shall not depend on a particular AFM machine or vendor export format; it shall process the specified general height-table format.
 - **REQ-052 — Scientific validation:** Feature definitions, thresholds, measurements, and analysis results shall be checked against scientific reference data supplied during the project. Passing software tests alone shall not establish scientific correctness.
+- **REQ-053 — Python version:** The project shall support Python 3.13 and later versions.
 
 ## 7. Draft acceptance criteria
 
 - **AC-001:** Given a valid `.csv` height table and metadata plus a `.inp` request file, the program completes an analysis and produces a text results file.
 - **AC-002:** When no feature type is specified, the program analyzes trenches by default.
-- **AC-003:** When no thresholds are specified, the documented default thresholds are applied in nanometers.
+- **AC-003:** When no thresholds are specified, the documented default thresholds are applied in nanometers. The defaults give a trench length-to-width ratio of 2.0, and every accepted trench threshold configuration satisfies the minimum ratio of 1.5.
 - **AC-004:** Each reported feature has a type-specific index, and the results state the total count for each reported type.
 - **AC-005:** Trench results include length, width, and depth; bump results include projected area and maximum height; pit results include projected area and maximum depth.
 - **AC-006:** Measurements use the requested units, or the documented defaults if none are requested.
@@ -74,12 +75,12 @@ These details are not yet specified and should remain open rather than be guesse
 
 - The exact syntax and supported keywords for `.inp` files.
 - The exact metadata syntax and conventions for the `.csv` file, including how metadata lines are distinguished from matrix rows.
-- Whether thresholds mean minimum dimensions/depths, and the exact comparison behavior at the threshold.
+- The exact comparison behavior at each threshold and how thresholds apply before or after candidate grouping.
 - How feature boundaries are determined, how measurements such as trench length and width are calculated, and how the nearby surrounding reference points are selected.
 - How overlap is determined when regions have different boundaries or only partially intersect.
 - Whether results should include a feature’s location or pixel coordinates; these are not yet specified.
 - The exact text layout and meaning of output detail levels.
 - Which plots are required and what they should show.
 - What constitutes an error versus a warning, and how invalid or incomplete inputs should be reported.
-- What installation environments and Python versions should be supported.
+- What installation environments should be supported.
 - The scientific reference data and independent validation criteria are to be supplied as the project progresses.
