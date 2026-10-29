@@ -1,0 +1,5 @@
+5. My recommendation: use three levels of planning
+For your project, I would distinguish three levels:
+1. Project level: Agree on the overall architecture, repository structure, technical tooling and major module boundaries.
+2. Increment level: Agree on the next small capability, its interfaces, acceptance criteria and tests.
+3. Code level: Let Codex make ordinary implementation decisions within those boundaries, review the changes, and verify them.

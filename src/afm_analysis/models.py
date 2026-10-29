@@ -1,9 +1,14 @@
-"""Data models for validated operator analysis requests."""
+"""Data models used by AFM analysis."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+
+import numpy as np
+from numpy.typing import NDArray
+
+FloatArray = NDArray[np.float64]
 
 
 class FeatureType(StrEnum):
@@ -47,3 +52,16 @@ class EffectiveRequest:
     trench_thresholds: TrenchThresholds | None = None
     bump_thresholds: BumpThresholds | None = None
     pit_thresholds: PitThresholds | None = None
+
+
+@dataclass(frozen=True)
+class ImageData:
+    """AFM height grid and calibrated image geometry, with distances in nm."""
+
+    heights_nm: FloatArray
+    width_nm: float
+    height_nm: float
+    width_pixels: int
+    height_pixels: int
+    pixel_pitch_x_nm: float
+    pixel_pitch_y_nm: float

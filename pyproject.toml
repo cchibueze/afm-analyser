@@ -7,7 +7,7 @@ name = "afm-analysis"
 version = "0.1.0"
 description = "Analysis tools for AFM chip-wafer surface data"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = ["numpy>=2.1"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
