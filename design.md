@@ -37,7 +37,7 @@ Do not introduce a general detector interface, plugin registry, dependency-injec
 
 The following are conceptual values passed between stages. Their final Python representation and exact fields depend on the file-format and scientific decisions that remain open.
 
-- **Image data:** a 2D height grid plus measurement metadata describing pixel dimensions, physical dimensions, and stated units. Analysis receives calibrated physical spacing and heights in nm.
+- **Image data:** a 2D grid of measured surface heights plus metadata describing pixel dimensions, physical width and row-axis length, and stated units. The physical row-axis length is represented internally as `length_nm`, distinct from the per-point `heights_nm` values. Analysis receives calibrated physical spacing and heights in nm.
 - **Parsed request:** operator-specified feature types, thresholds, result units, detail level, plot request, and whether operational details should also appear in the results file.
 - **Effective request:** validated request with documented defaults applied. Thresholds are represented in nm; area thresholds, if introduced by later approved requirements, would use nm². Bump and pit thresholds have separate models so their fields and behavior can evolve independently.
 - **Feature candidate/result:** feature type, region representation, and required measurements. The region representation must support agreed grouping and overlap decisions. Whether results include location or pixel coordinates remains open.
@@ -92,7 +92,7 @@ Overlap selection is a distinct responsibility because requirements define both 
 | Requirement area | Design response |
 |---|---|
 | 2D height grid and measurement metadata (REQ-001–004) | Image data represents the calibrated 2D surface; no GUI or 3D model is included. |
-| Input formats and operator choices (REQ-010–019) | Dedicated input responsibilities parse CSV and INP; request validation applies documented defaults. CSV physical dimensions and height values use the same declared unit, initially meters or nanometers. Exact syntax remains open. |
+| Input formats and operator choices (REQ-010–019) | Dedicated input responsibilities parse CSV and INP; request validation applies documented defaults. CSV physical width and row-axis length and the matrix height values use the same declared unit, initially meters or nanometers. The CSV keys `ImageHeight` and `ImageHeightPixel` map to the internal row-axis length fields. Exact syntax remains open. |
 | Feature definitions and measurements (REQ-020–026) | Scientific analysis handles trench, bump, and pit candidates and their required measurements; algorithms await scientific definitions and reference data. Internal units are nm and nm², with result conversion at output. |
 | Grouping and priority (REQ-030–033) | Separate overlap selection groups same-type overlap and applies trench, pit, bump priority. Partial-overlap semantics remain open. |
 | Results, logs, plots, and console behavior (REQ-040–048) | Results and plots are file outputs; run reporting writes operational messages during the run; optional messages are included in results by request; no confidence values or console analysis output. |
@@ -118,13 +118,13 @@ Embedding all overlap behavior in each detector might appear simpler for one fea
 
 ### Internal and output units
 
-Carrying varied units through scientific calculations would increase conversion and comparison complexity. Converting to nm and nm² at the boundaries gives thresholds and measurements a consistent basis. The initial production input conversion supports meters and nanometers; the CSV declared unit applies to image width, image height, and the height matrix. Other result-unit choices remain to be specified before output conversion is implemented.
+Carrying varied units through scientific calculations would increase conversion and comparison complexity. Converting to nm and nm² at the boundaries gives thresholds and measurements a consistent basis. The initial production input conversion supports meters and nanometers; the CSV declared unit applies to image width, row-axis length, and the height values in the matrix. The existing CSV keys `ImageHeight` and `ImageHeightPixel` describe the row-axis physical extent and its pixel count; internally these are `length_nm` and `length_pixels`. Other result-unit choices remain to be specified before output conversion is implemented.
 
 ## 9. Assumptions, risks, and open decisions
 
 The following are not resolved by this design and must not be silently guessed during implementation:
 
-1. **CSV metadata format:** Exact fields and syntax, how metadata lines are identified, matrix validation, and how physical image width/height determine pixel spacing.
+1. **CSV metadata format:** Exact fields and syntax, how metadata lines are identified, matrix validation, and how physical image width and row-axis length determine pixel spacing. The agreed CSV keys remain `ImageWidth`, `ImageHeight`, `ImageWidthPixel`, and `ImageHeightPixel`; internally, `ImageHeight` and `ImageHeightPixel` map to `length_nm` and `length_pixels` to distinguish image geometry from matrix height values.
 2. **INP grammar:** Keywords, optional values, duplicate requests, malformed input behavior, and exact output-detail choices.
 3. **Supported units:** Initial production CSV input supports meters and nanometers, with one declared unit applying to physical image dimensions and height data. Result units beyond defaults, treatment of unknown units, and area conversion rules remain to be specified. Internal units are nm and nm².
 4. **Threshold semantics:** Whether each threshold is a minimum, how equality at the threshold behaves, and whether dimensions apply to a candidate before or after grouping.

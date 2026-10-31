@@ -35,9 +35,9 @@ def test_reads_metadata_and_converts_values_and_pitch_from_meters(tmp_path: Path
     image = read_csv(path)
 
     assert image.width_nm == pytest.approx(4.0)
-    assert image.height_nm == pytest.approx(6.0)
+    assert image.length_nm == pytest.approx(6.0)
     assert image.width_pixels == 5
-    assert image.height_pixels == 4
+    assert image.length_pixels == 4
     assert image.pixel_pitch_x_nm == pytest.approx(1.0)
     assert image.pixel_pitch_y_nm == pytest.approx(2.0)
     assert isinstance(image.heights_nm, np.ndarray)
@@ -110,6 +110,6 @@ def test_supplied_sample_has_one_nanometer_pixel_pitch() -> None:
     image = read_csv(sample)
 
     assert image.width_pixels == 500
-    assert image.height_pixels == 500
+    assert image.length_pixels == 500
     assert image.pixel_pitch_x_nm == pytest.approx(1.0)
     assert image.pixel_pitch_y_nm == pytest.approx(1.0)

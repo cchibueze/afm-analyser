@@ -11,7 +11,7 @@
 ## 2. Inputs and operator requests
 
 - **REQ-010 — Image data file:** The program shall accept a `.csv` file containing metadata in its first lines, followed by the 2D height matrix, with each matrix row represented by a line.
-- **REQ-011 — Image metadata:** The metadata shall describe image width and height in pixels and physical length units, and state a declared unit that applies to both physical image dimensions and height data.
+- **REQ-011 — Image metadata:** The metadata shall describe image width and row-axis length in pixels and physical length units, and state a declared unit that applies to both physical image dimensions and the height values in the matrix.
 - **REQ-012 — Supported input units:** The initial production implementation shall support meters and nanometers for physical image dimensions and height data.
 - **REQ-013 — Request file:** The initial version shall accept operator requests through a `.inp` text file containing lines with keywords and optional specifications.
 - **REQ-014 — Feature requests:** The request file shall allow the operator to specify wanted feature types and feature-specific thresholds.

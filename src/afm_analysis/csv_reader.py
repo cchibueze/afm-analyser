@@ -76,10 +76,10 @@ def read_csv(path: str | Path) -> ImageData:
     scale = _UNIT_TO_NM[unit]
 
     width_nm = _positive_finite(metadata["ImageWidth"], "ImageWidth") * scale
-    height_nm = _positive_finite(metadata["ImageHeight"], "ImageHeight") * scale
+    length_nm = _positive_finite(metadata["ImageHeight"], "ImageHeight") * scale
     width_pixels = _positive_integer(metadata["ImageWidthPixel"], "ImageWidthPixel")
-    height_pixels = _positive_integer(metadata["ImageHeightPixel"], "ImageHeightPixel")
-    if width_pixels < 2 or height_pixels < 2:
+    length_pixels = _positive_integer(metadata["ImageHeightPixel"], "ImageHeightPixel")
+    if width_pixels < 2 or length_pixels < 2:
         raise CSVFormatError("ImageWidthPixel and ImageHeightPixel must both be at least 2")
 
     rows: list[tuple[float, ...]] = []
@@ -97,17 +97,17 @@ def read_csv(path: str | Path) -> ImageData:
         )
         rows.append(values)
 
-    if len(rows) != height_pixels:
-        raise CSVFormatError(f"expected {height_pixels} matrix rows, found {len(rows)}")
+    if len(rows) != length_pixels:
+        raise CSVFormatError(f"expected {length_pixels} matrix rows, found {len(rows)}")
 
     return ImageData(
         heights_nm=np.asarray(rows, dtype=np.float64),
         width_nm=width_nm,
-        height_nm=height_nm,
+        length_nm=length_nm,
         width_pixels=width_pixels,
-        height_pixels=height_pixels,
+        length_pixels=length_pixels,
         pixel_pitch_x_nm=width_nm / (width_pixels - 1),
-        pixel_pitch_y_nm=height_nm / (height_pixels - 1),
+        pixel_pitch_y_nm=length_nm / (length_pixels - 1),
     )
 
 

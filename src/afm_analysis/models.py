@@ -56,12 +56,16 @@ class EffectiveRequest:
 
 @dataclass(frozen=True)
 class ImageData:
-    """AFM height grid and calibrated image geometry, with distances in nm."""
+    """AFM height grid and calibrated image geometry, with distances in nm.
+
+    ``length_nm`` is the physical extent along the matrix row (Y) axis;
+    ``heights_nm`` contains the measured surface height at each grid point.
+    """
 
     heights_nm: FloatArray
     width_nm: float
-    height_nm: float
+    length_nm: float
     width_pixels: int
-    height_pixels: int
+    length_pixels: int
     pixel_pitch_x_nm: float
     pixel_pitch_y_nm: float

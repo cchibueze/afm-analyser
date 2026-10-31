@@ -9,6 +9,9 @@ description = "Analysis tools for AFM chip-wafer surface data"
 requires-python = ">=3.13"
 dependencies = ["numpy>=2.1"]
 
+[project.scripts]
+afm-analysis = "afm_analysis.cli:main"
+
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
 
