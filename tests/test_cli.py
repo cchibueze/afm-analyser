@@ -1,11 +1,15 @@
 """Tests for CLI argument conversion and request validation."""
 
+from __future__ import annotations
+
 import argparse
+import sys
 
 import pytest
 
 from afm_analysis.cli import build_parser, main, request_from_args
 from afm_analysis.models import FeatureType
+from afm_analysis.reporting import ReportingError
 
 
 def _parse(*arguments: str) -> argparse.Namespace:
@@ -97,3 +101,23 @@ def test_cli_success_returns_zero_without_console_output(
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
+
+
+def test_cli_returns_two_when_reporter_write_fails(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    class FailingReporter:
+        def __enter__(self) -> FailingReporter:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            return None
+
+        def progress(self, message: str) -> None:
+            print("Unable to write to run logfile: disk full", file=sys.stderr)
+            raise ReportingError("Unable to write to run logfile: disk full")
+
+    monkeypatch.setattr("afm_analysis.cli.RunReporter", FailingReporter)
+
+    assert main(["--path", "image.csv"]) == 2
+    assert capsys.readouterr().err.count("Unable to write to run logfile") == 1

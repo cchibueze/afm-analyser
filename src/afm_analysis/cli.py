@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from afm_analysis.models import EffectiveRequest, FeatureType
+from afm_analysis.reporting import ReportingError, RunReporter
 from afm_analysis.requests import Request, validate_request
 
 
@@ -85,9 +86,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        request_from_args(args)
-    except ValueError as error:
-        print(f"{parser.prog}: error: {error}", file=sys.stderr)
+        reporter = RunReporter()
+    except ReportingError:
+        return 2
+    try:
+        with reporter:
+            reporter.progress("Run started")
+            try:
+                request_from_args(args)
+            except ValueError as error:
+                print(f"{parser.prog}: error: {error}", file=sys.stderr)
+                reporter.error(str(error))
+                return 2
+    except ReportingError:
+        # The reporter has already printed its failure diagnostic to stderr.
         return 2
     return 0
 

@@ -47,7 +47,7 @@
 - **REQ-044 — Log file:** Errors, warnings, and progress reports shall be recorded in a plain-text logfile.
 - **REQ-045 — Optional details in results:** When requested, operational analysis details (errors, warnings, and progress reports) may also be included in the results file.
 - **REQ-046 — Plots:** When requested, plots shall be generated as additional files.
-- **REQ-047 — Console output:** The initial version shall not print analysis output to the console.
+- **REQ-047 — Console output:** The initial version shall not print scientific analysis output to the console. CLI diagnostics and logfile setup or writing failures may be printed to standard error; scientific results shall be written to an output file in a later increment.
 - **REQ-048 — Confidence values deferred:** The initial version shall not calculate or report confidence values. Future work may add separate confidence measures for whether a region is an actual feature and whether it is of interest.
 
 ## 6. Usability and scientific constraints
@@ -67,7 +67,7 @@
 - **AC-006:** Measurements use the requested units, or the documented defaults if none are requested.
 - **AC-007:** Same-type overlapping regions are reported as one entity; different-type overlaps follow the stated priority.
 - **AC-008:** A logfile contains errors, warnings, and progress reports; requested plots and optional operational details are produced.
-- **AC-009:** Analysis output is not printed to the console.
+- **AC-009:** Scientific analysis output is not printed to the console; CLI diagnostics may be printed to standard error.
 
 ## 8. Assumptions and unresolved questions
 

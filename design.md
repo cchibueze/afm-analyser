@@ -73,7 +73,7 @@ Run reporter ──> logfile throughout the run
              └─> results file too, when requested
 ```
 
-The results file is written when sufficient analysis data is available. The logfile is written during the run, so operational information is preserved even if later analysis or output fails. The program shall not print analysis output to the console. CLI exit behavior and any non-analysis diagnostics remain to be specified.
+The results file is written when sufficient analysis data is available. The logfile is written during the run, so operational information is preserved even if later analysis or output fails. Scientific analysis output is not printed to the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error. Scientific results are written to an output file in a later increment. CLI exit behavior remains to be specified.
 
 ## 6. Scientific analysis and overlap rules
 
@@ -132,7 +132,7 @@ The following are not resolved by this design and must not be silently guessed d
 6. **Overlap semantics:** How overlap is computed for regions with different boundaries, partial intersection, and whether priority suppresses a whole candidate or only its intersecting portion.
 7. **Reported location:** Whether each feature needs coordinates, a bounding region, or another location description.
 8. **Outputs:** Exact results layout, meaning of detail levels, required plot types/content, filenames, and behavior on partial output failure.
-9. **Operational behavior:** Error versus warning definitions, logfile format, handling of invalid/incomplete files, CLI exit codes, and how to satisfy no-console-output behavior for both success and failure.
+9. **Operational behavior:** Error versus warning definitions, logfile format, handling of invalid/incomplete files, and CLI exit codes. Scientific analysis output stays off the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error.
 10. **Environment and validation:** Python 3.13 and later are supported; the installation environment and scientific reference datasets, expected outputs, and independent acceptance criteria remain to be specified.
 
 The largest risk is treating algorithmic choices as implementation details when they affect scientific meaning. Those choices should be documented and checked against reference data before claims of scientific correctness.
@@ -144,8 +144,9 @@ The largest risk is treating algorithmic choices as implementation details when 
 3. Implement request models, validation, and documented defaults; test those defaults and validation rules. Add file parsing only after its syntax is agreed.
 4. Agree scientific definitions and reference examples. Implement one feature path at a time, validating measurements against those references.
 5. Implement same-type grouping and cross-type priority after overlap semantics and examples are agreed.
-6. Add results and logfile output, with operational reporting active throughout the run; then add optional results details and requested plots.
-7. Run end-to-end CLI checks and compare scientific outputs to the supplied reference data.
-8. Add or refine modules only where implemented responsibilities or independent testing needs justify those boundaries.
+6. Add lightweight operational reporting to the CLI and pass the reporter explicitly to pipeline stages as they are implemented. Write progress, warnings, and errors to a plain-text logfile; allow CLI diagnostics and logfile failures on standard error while keeping scientific analysis output off the console.
+7. Add results output once sufficient analysis data is available, including the logfile location and optional operational details; then add requested plots.
+8. Run end-to-end CLI checks and compare scientific outputs to the supplied reference data.
+9. Add or refine modules only where implemented responsibilities or independent testing needs justify those boundaries.
 
 This sequence is incremental: input/output contracts can be established early, while scientific rules remain explicit decisions rather than assumptions hidden in code.
