@@ -5,7 +5,7 @@ import pytest
 from trench_detection_skimage import Trench, load_afm_csv, measure_trenches, segment_low_regions
 
 
-DATASET = Path(__file__).resolve().parents[2] / "data" / "interview_line_space_image.csv"
+DATASET = Path(__file__).resolve().parents[2] / "data" / "trenches.csv"
 
 
 def analyze(

@@ -6,7 +6,7 @@ This document describes the initial software design for the requirements in `req
 
 The initial scope is trenches, pits, and bumps. A GUI, 3D or stacked-wafer data, confidence values, vendor-specific input formats, and a general plugin system are outside the initial design.
 
-The design intentionally leaves the scientific definitions and algorithms that are unresolved in the requirements open. These include exact feature boundaries, local reference-surface selection, measurement methods, and partial-overlap behavior. Those decisions require scientific definitions and reference data before implementation can be considered validated.
+The scientific definitions approved for Increment 5 are recorded in `requirements.md`. Production analysis should implement those definitions and validate them against the approved reference cases. Exploratory prototypes remain evidence about possible techniques, not authoritative scientific behavior unless a rule was explicitly adopted.
 
 ## 2. Design summary
 
@@ -27,7 +27,7 @@ These responsibilities describe the production component boundaries, not a requi
 | INP request input | Reading request keywords and optional specifications. | Scientific algorithms. |
 | Request models and validation | Representing feature-specific thresholds and validated selections; applying documented defaults, including trench-only selection and the trench length-to-width constraint. | Duplicating defaults in detectors or output code. |
 | Run reporting | Recording progress, warnings, and errors throughout the run in the logfile and, when requested, making those details available for inclusion in results. | Scientific calculations or feature measurements. |
-| Candidate analysis | Detecting requested feature candidates and measuring required properties according to agreed scientific rules. | CSV/INP syntax, logfile paths, and report formatting. |
+| Candidate analysis | Preprocessing heights, detecting requested candidates, measuring required properties, and applying the approved boundary and local-reference rules. Detection and measurements use their specified filtered/smoothed image representations. | CSV/INP syntax, logfile paths, and report formatting. |
 | Overlap selection | Grouping overlapping candidates of the same type and resolving cross-type overlaps using the agreed rule. | Candidate generation or result serialization. |
 | Results and plots | Writing type-indexed features, counts, measurements, calculation choices, logfile location, optional operational details, and requested plots. | Recomputing scientific measurements. |
 
@@ -39,7 +39,7 @@ The following are conceptual values passed between stages. Their final Python re
 
 - **Image data:** a 2D grid of measured surface heights plus metadata describing pixel dimensions, physical width and row-axis length, and stated units. The physical row-axis length is represented internally as `length_nm`, distinct from the per-point `heights_nm` values. Analysis receives calibrated physical spacing and heights in nm.
 - **Parsed request:** operator-specified feature types, thresholds, result units, detail level, plot request, and whether operational details should also appear in the results file.
-- **Effective request:** validated request with documented defaults applied. Thresholds are represented in nm; area thresholds, if introduced by later approved requirements, would use nm². Bump and pit thresholds have separate models so their fields and behavior can evolve independently.
+- **Effective request:** validated request with documented defaults applied. Thresholds are represented in nm; area values use nm². The local-reference shell defaults to 11×11 pixels and may be operator-configurable. Bump and pit thresholds have separate models so their fields and behavior can evolve independently.
 - **Feature candidate/result:** feature type, region representation, and required measurements. The region representation must support agreed grouping and overlap decisions. Whether results include location or pixel coordinates remains open.
 - **Run reporter:** a lightweight way for stages to record progress, warnings, and errors as the run proceeds. It should be initialized by the CLI and passed explicitly to stages that need to report. Scientific code should not write directly to files or know logfile formatting.
 - **Analysis result:** selected features and their measurements, together with enough effective-request information to describe calculation choices in the results file.
@@ -77,15 +77,16 @@ The results file is written when sufficient analysis data is available. The logf
 
 ## 6. Scientific analysis and overlap rules
 
-Candidate analysis owns the scientific logic for the requested initial feature types:
+Candidate analysis shall follow the approved scientific rules in `requirements.md`:
 
-- A trench is a roughly rectangular gap substantially lower than nearby surrounding points; reported measurements are length, width, and depth.
-- A bump is a locally higher region with a generally round or square-like projection; reported measurements are projected area and maximum height relative to nearby surroundings.
-- A pit is a locally lower region with a projection similar to a bump; reported measurements are projected area and maximum depth relative to nearby surroundings.
+- Calculate the image-wide mean and standard deviation; replace heights with absolute Z-score greater than 3 by the image-wide mean; then apply Gaussian smoothing at sigma 1 pixel. Use the filtered-and-smoothed image for detection, and the filtered, unsmoothed image for measurements. Bump and pit gradients use one-pixel differences with calibrated physical pixel spacing; trench detection need not calculate gradients.
+- Use an 11×11-pixel shell by default for each candidate's local reference, configurable per request. Exclude footprint points, retain shell values at or above the image-wide median, and average them. If none remain, use the median of the filtered image. This applies to all feature types.
+- A trench footprint contains points whose depth below the local reference is at least the requested minimum trench depth. Trench depth is local reference minus mean filtered height over the footprint; length and width use region-moment axes with V2's rectangular correction.
+- Bump and pit boundaries grow from extrema on the detection image. After the steep flank, the first outward point where slope falls below 20% grade defines the boundary; retain the connected interior, including low-slope seed areas. Merge same-type candidates whose grown footprints touch under 8-connectivity.
+- Bump/pit area is pixel-cell count times calibrated pixel pitches, clipping cells at image edges. Their diameter threshold uses equivalent-area diameter. Their aspect ratio is the region-moment major axis divided by minor axis and must be below 1.5. Centered-height reference measurements average a 3×3 neighborhood around the bump maximum or pit minimum, including the extremum pixel and clipping at image edges.
+- Minimum thresholds pass at equality. Measure, merge same-type candidates, then apply thresholds. Compare unrounded measurements and round only for display.
 
-The detailed rules for determining regions, surrounding points, and measurements must be agreed against scientific reference data. Software tests can check behavior against defined examples, but passing tests alone does not establish scientific correctness.
-
-Overlap selection is a distinct responsibility because requirements define both same-type grouping and cross-type priority. Same-type overlapping candidates are treated as one entity. For overlaps between different feature types, the initial priority is trench, then pit, then bump. The exact geometric meaning of overlap, especially partial intersections, remains open. Future selection rules such as physical prominence should be considered only when specified; the initial implementation should not include speculative strategies.
+Overlap selection is a distinct responsibility. Same-type footprints touching by an edge or corner merge transitively. If different-type footprints overlap or touch under 8-connectivity, retain only the higher-priority whole feature: trench, then pit, then bump. Software tests can check behavior against defined examples, but passing tests alone does not establish scientific correctness.
 
 ## 7. Requirements coverage
 
@@ -93,10 +94,10 @@ Overlap selection is a distinct responsibility because requirements define both 
 |---|---|
 | 2D height grid and measurement metadata (REQ-001–004) | Image data represents the calibrated 2D surface; no GUI or 3D model is included. |
 | Input formats and operator choices (REQ-010–019) | Dedicated input responsibilities parse CSV and INP; request validation applies documented defaults. CSV physical width and row-axis length and the matrix height values use the same declared unit, initially meters or nanometers. The CSV keys `ImageHeight` and `ImageHeightPixel` map to the internal row-axis length fields. Exact syntax remains open. |
-| Feature definitions and measurements (REQ-020–026) | Scientific analysis handles trench, bump, and pit candidates and their required measurements; algorithms await scientific definitions and reference data. Internal units are nm and nm², with result conversion at output. |
-| Grouping and priority (REQ-030–033) | Separate overlap selection groups same-type overlap and applies trench, pit, bump priority. Partial-overlap semantics remain open. |
+| Feature definitions and measurements (REQ-020–028) | Scientific analysis follows approved preprocessing, boundary, local-reference, measurement, and aspect-ratio rules. Internal units are nm and nm², with result conversion at output. |
+| Grouping and priority (REQ-030–033) | Separate overlap selection merges 8-connected same-type footprints and suppresses lower-priority whole features using trench, pit, bump priority. |
 | Results, logs, plots, and console behavior (REQ-040–048) | Results and plots are file outputs; run reporting writes operational messages during the run; optional messages are included in results by request; no confidence values or console analysis output. |
-| Workflow, machine independence, and scientific validation (REQ-050–052) | CLI orchestrates general height-table input. Tests support software behavior, while independent reference-data checks assess scientific validity. |
+| Workflow, machine independence, and scientific validation (REQ-050–053) | CLI orchestrates general height-table input. Tests support software behavior; approved reference cases and additional independent data assess scientific validity. |
 
 ## 8. Alternatives and trade-offs
 
@@ -127,13 +128,10 @@ The following are not resolved by this design and must not be silently guessed d
 1. **CSV metadata format:** Exact fields and syntax, how metadata lines are identified, matrix validation, and how physical image width and row-axis length determine pixel spacing. The agreed CSV keys remain `ImageWidth`, `ImageHeight`, `ImageWidthPixel`, and `ImageHeightPixel`; internally, `ImageHeight` and `ImageHeightPixel` map to `length_nm` and `length_pixels` to distinguish image geometry from matrix height values.
 2. **INP grammar:** Keywords, optional values, duplicate requests, malformed input behavior, and exact output-detail choices.
 3. **Supported units:** Initial production CSV input supports meters and nanometers, with one declared unit applying to physical image dimensions and height data. Result units beyond defaults, treatment of unknown units, and area conversion rules remain to be specified. Internal units are nm and nm².
-4. **Threshold semantics:** Whether each threshold is a minimum, how equality at the threshold behaves, and whether dimensions apply to a candidate before or after grouping.
-5. **Scientific definitions:** Boundary detection, local surroundings, baseline construction, trench length/width calculation, bump/pit area and extrema, and handling of distorted shapes.
-6. **Overlap semantics:** How overlap is computed for regions with different boundaries, partial intersection, and whether priority suppresses a whole candidate or only its intersecting portion.
-7. **Reported location:** Whether each feature needs coordinates, a bounding region, or another location description.
-8. **Outputs:** Exact results layout, meaning of detail levels, required plot types/content, filenames, and behavior on partial output failure.
-9. **Operational behavior:** Error versus warning definitions, logfile format, handling of invalid/incomplete files, and CLI exit codes. Scientific analysis output stays off the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error.
-10. **Environment and validation:** Python 3.13 and later are supported; the installation environment and scientific reference datasets, expected outputs, and independent acceptance criteria remain to be specified.
+4. **Reported location:** Whether each feature needs coordinates, a bounding region, or another location description.
+5. **Outputs:** Exact results layout, meaning of detail levels, required plot types/content, filenames, and behavior on partial output failure.
+6. **Operational behavior:** Error versus warning definitions, logfile format, handling of invalid/incomplete files, and CLI exit codes. Scientific analysis output stays off the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error.
+7. **Environment and validation:** Python 3.13 and later are supported; the installation environment and additional independent scientific validation datasets/tolerances remain to be specified. The approved Increment 5 reference cases and expected ranges are in `requirements.md`.
 
 The largest risk is treating algorithmic choices as implementation details when they affect scientific meaning. Those choices should be documented and checked against reference data before claims of scientific correctness.
 
@@ -142,8 +140,8 @@ The largest risk is treating algorithmic choices as implementation details when 
 1. Agree CSV and INP formats, external units, invalid-input behavior, and CLI output/exit conventions.
 2. Build the production package incrementally, with explicit data passed between input, analysis, selection, reporting, and output responsibilities. Keep exploratory prototypes separate.
 3. Implement request models, validation, and documented defaults; test those defaults and validation rules. Add file parsing only after its syntax is agreed.
-4. Agree scientific definitions and reference examples. Implement one feature path at a time, validating measurements against those references.
-5. Implement same-type grouping and cross-type priority after overlap semantics and examples are agreed.
+4. Implement the approved scientific definitions and validate each feature path against the reference examples in `requirements.md`; add independent scientific reference data when supplied.
+5. Implement same-type grouping and cross-type priority using the approved 8-connectivity and whole-feature suppression rules.
 6. Add lightweight operational reporting to the CLI and pass the reporter explicitly to pipeline stages as they are implemented. Write progress, warnings, and errors to a plain-text logfile; allow CLI diagnostics and logfile failures on standard error while keeping scientific analysis output off the console.
 7. Add results output once sufficient analysis data is available, including the logfile location and optional operational details; then add requested plots.
 8. Run end-to-end CLI checks and compare scientific outputs to the supplied reference data.

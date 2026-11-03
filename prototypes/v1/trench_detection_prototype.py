@@ -376,7 +376,7 @@ def run(input_path: Path, output_dir: Path, threshold_nm: float | None = None) -
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    default_input = Path(__file__).resolve().parents[2] / "data" / "interview_line_space_image.csv"
+    default_input = Path(__file__).resolve().parents[2] / "data" / "trenches.csv"
     parser.add_argument("--input", type=Path, default=default_input, help="AFM metadata-plus-matrix CSV")
     parser.add_argument(
         "--output-dir",

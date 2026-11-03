@@ -236,7 +236,7 @@ def run(input_path: Path, output_dir: Path, threshold_nm: float | None = None) -
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     project_root = Path(__file__).resolve().parents[2]
-    parser.add_argument("--input", type=Path, default=project_root / "data" / "interview_line_space_image.csv")
+    parser.add_argument("--input", type=Path, default=project_root / "data" / "trenches.csv")
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent / "output")
     parser.add_argument("--threshold-nm", type=float, default=None)
     args = parser.parse_args(argv)

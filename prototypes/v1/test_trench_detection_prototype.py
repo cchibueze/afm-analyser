@@ -12,7 +12,7 @@ from trench_detection_prototype import (
 )
 
 
-DATASET = Path(__file__).resolve().parents[2] / "data" / "interview_line_space_image.csv"
+DATASET = Path(__file__).resolve().parents[2] / "data" / "trenches.csv"
 
 
 def test_supplied_csv_loads_with_agreed_pixel_spacing() -> None:

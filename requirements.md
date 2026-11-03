@@ -23,18 +23,20 @@
 
 ## 3. Feature definitions and measurements
 
-- **REQ-020 — Trench definition:** A trench is a roughly rectangular surface gap whose bottom is substantially lower than nearby surrounding surface points. Its bottom or walls may bend or deviate to some degree from a rectangular shape.
-- **REQ-021 — Trench measurements:** For each reported trench, results shall include length, width, and depth.
-- **REQ-022 — Bump definition:** A bump is a group of surface points locally higher than nearby surrounding points. Its 2D projection is generally round, though it may be square-like.
-- **REQ-023 — Bump measurements:** For each reported bump, results shall include projected area and maximum height relative to nearby surrounding points.
-- **REQ-024 — Pit definition:** A pit is a group of surface points locally lower than nearby surrounding points, with a projected shape similar to a bump.
-- **REQ-025 — Pit measurements:** For each reported pit, results shall include projected area and maximum depth relative to nearby surrounding points.
-- **REQ-026 — Measurement units:** Feature measurements shall default to nanometers; projected area shall default to nm². The operator may request other result units.
+- **REQ-020 — Detection preprocessing:** Before candidate detection, the program shall calculate the image-wide mean and standard deviation, replace heights whose absolute Z-score is greater than 3 with the image-wide mean, then apply Gaussian smoothing with sigma 1 pixel. The outlier-replaced, unsmoothed grid is the filtered image; the smoothed grid is the detection image. Measurements shall use the filtered image, not the smoothed image. Gradient calculations are required for bump and pit detection but are not required for trench detection.
+- **REQ-021 — Local reference surface:** For each candidate, the program shall form a shell around its footprint using an 11×11-pixel default neighborhood, configurable per operator request. Exclude footprint points and retain shell heights greater than or equal to the image-wide median. The local reference height shall be the average of retained shell heights. If none are available, use the median of all filtered image heights. Apply this rule to trenches, bumps, and pits.
+- **REQ-022 — Trench definition and boundary:** A trench is a roughly rectangular surface gap whose bottom is lower than nearby surrounding surface points; its bottom or walls may bend or deviate from a rectangular shape. Relative to the local reference height, include filtered-image footprint points whose depth is greater than or equal to the requested minimum trench depth. Points above that boundary criterion belong to the transition wall or surrounding surface and are excluded.
+- **REQ-023 — Trench measurements:** For each reported trench, results shall include length, width, and depth. Depth is the local reference height minus the average filtered height of all collected trench points. Length and width shall use the region-moment major and minor axes, respectively, with the rectangular correction used in exploratory prototype V2.
+- **REQ-024 — Bump definition and boundary:** A bump is a locally higher region with a generally round or square-like projection. Identify extremum seeds in the detection image and grow outward using slope calculated from one-pixel finite differences with calibrated physical pixel spacing. After the steep flank, the first outward location where slope falls below 20% grade marks the boundary. Retain the seed-connected interior even where its slope is low; stop at the first below-threshold crossing even if slope later increases.
+- **REQ-025 — Bump measurements and shape:** For each reported bump, results shall include projected area and maximum height relative to the local reference. Projected area shall be the footprint pixel-cell count times calibrated pixel pitch in both axes, with cells clipped at image edges. The minimum-diameter threshold shall use equivalent-area diameter, 2 × sqrt(area / π). The aspect ratio, calculated as the region-moment major axis divided by its minor axis, shall be below 1.5. Centered height for reference cases shall be the average filtered height in a 3×3 window around the highest pixel, including that pixel; at an image edge, use available window pixels.
+- **REQ-026 — Pit definition and boundary:** A pit is a locally lower region with a projected shape similar to a bump. Identify extremum seeds in the detection image and grow outward using slope calculated from one-pixel finite differences with calibrated physical pixel spacing. After the steep flank, the first outward location where slope falls below 20% grade marks the boundary. Retain the seed-connected interior even where its slope is low; stop at the first below-threshold crossing even if slope later increases.
+- **REQ-027 — Pit measurements and shape:** For each reported pit, results shall include projected area and maximum depth relative to the local reference. Projected area shall be the footprint pixel-cell count times calibrated pixel pitch in both axes, with cells clipped at image edges. The minimum-diameter threshold shall use equivalent-area diameter, 2 × sqrt(area / π). The aspect ratio, calculated as the region-moment major axis divided by its minor axis, shall be below 1.5. Centered height for reference cases shall be the average filtered height in a 3×3 window around the lowest pixel, including that pixel; at an image edge, use available window pixels.
+- **REQ-028 — Measurement units:** Feature measurements shall default to nanometers; projected area shall default to nm². The operator may request other result units.
 
 ## 4. Feature grouping and overlap
 
-- **REQ-030 — Same-type overlap:** Overlapping regions of the same feature type shall be treated as one entity.
-- **REQ-031 — Different-type overlap:** When regions of different feature types overlap, only the feature type with the highest priority shall be selected for the overlapping entity.
+- **REQ-030 — Same-type overlap:** Same-type footprints connected by 8-connectivity, including diagonal pixel contact, shall be treated as one entity. Same-type extrema whose grown footprints connect shall be combined.
+- **REQ-031 — Different-type overlap:** When footprints of different feature types overlap or touch under 8-connectivity, only the higher-priority whole feature shall be retained; the lower-priority whole feature shall be suppressed.
 - **REQ-032 — Initial priority:** The initial priority order shall be trench, then pit, then bump.
 - **REQ-033 — Future selection rules:** The selection rule shall be changeable in future work to allow other rules, such as selection based on physical prominence.
 
@@ -65,9 +67,13 @@
 - **AC-004:** Each reported feature has a type-specific index, and the results state the total count for each reported type.
 - **AC-005:** Trench results include length, width, and depth; bump results include projected area and maximum height; pit results include projected area and maximum depth.
 - **AC-006:** Measurements use the requested units, or the documented defaults if none are requested.
-- **AC-007:** Same-type overlapping regions are reported as one entity; different-type overlaps follow the stated priority.
+- **AC-007:** Same-type footprints connected by 8-connectivity are reported as one entity; different-type overlaps or contacts suppress the lower-priority whole feature.
 - **AC-008:** A logfile contains errors, warnings, and progress reports; requested plots and optional operational details are produced.
 - **AC-009:** Scientific analysis output is not printed to the console; CLI diagnostics may be printed to standard error.
+- **AC-010 — Preprocessing and measurements:** Outliers with absolute Z-score greater than 3 are replaced by the image-wide mean before sigma-1-pixel Gaussian smoothing. Detection uses the filtered and smoothed image; measurements use the filtered, unsmoothed image.
+- **AC-011 — Trench reference case:** On `data/trenches.csv`, analysis identifies 3 horizontal, somewhat skewed trenches; each has width 45–55 nm and length 501–503 nm, and their mean depth is 28–32 nm.
+- **AC-012 — Bump reference case:** On `data/bump.csv`, the centered noisy bump measures 18–20 nm in equivalent-area diameter, has 3×3 centered height 3–7 nm, and aspect ratio below 1.5.
+- **AC-013 — Pit reference case:** On `data/pit.csv`, the centered noisy pit measures 18–20 nm in equivalent-area diameter, has 3×3 minimum-centered height −2 to +2 nm, and aspect ratio below 1.5.
 
 ## 8. Assumptions and unresolved questions
 
@@ -75,12 +81,9 @@ These details are not yet specified and should remain open rather than be guesse
 
 - The exact syntax and supported keywords for `.inp` files.
 - The exact metadata syntax and conventions for the `.csv` file, including how metadata lines are distinguished from matrix rows.
-- The exact comparison behavior at each threshold and how thresholds apply before or after candidate grouping.
-- How feature boundaries are determined, how measurements such as trench length and width are calculated, and how the nearby surrounding reference points are selected.
-- How overlap is determined when regions have different boundaries or only partially intersect.
 - Whether results should include a feature’s location or pixel coordinates; these are not yet specified.
 - The exact text layout and meaning of output detail levels.
 - Which plots are required and what they should show.
 - What constitutes an error versus a warning, and how invalid or incomplete inputs should be reported.
 - What installation environments should be supported.
-- The scientific reference data and independent validation criteria are to be supplied as the project progresses.
+- Additional independent scientific validation data and tolerances may be supplied as the project progresses; the initial approved reference cases and expected ranges are specified in AC-011–AC-013.
