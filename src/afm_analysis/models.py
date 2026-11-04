@@ -69,3 +69,13 @@ class ImageData:
     length_pixels: int
     pixel_pitch_x_nm: float
     pixel_pitch_y_nm: float
+
+
+@dataclass(frozen=True)
+class TrenchResult:
+    """Measured trench and its boolean pixel footprint."""
+
+    footprint: NDArray[np.bool_]
+    length_nm: float
+    width_nm: float
+    depth_nm: float
