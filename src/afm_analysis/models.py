@@ -79,3 +79,27 @@ class TrenchResult:
     length_nm: float
     width_nm: float
     depth_nm: float
+
+
+@dataclass(frozen=True)
+class PitResult:
+    """Measured pit and its boolean pixel footprint."""
+
+    footprint: NDArray[np.bool_]
+    area_nm2: float
+    diameter_nm: float
+    maximum_depth_nm: float
+    centered_height_nm: float
+    aspect_ratio: float
+
+
+@dataclass(frozen=True)
+class BumpResult:
+    """Measured bump and its boolean pixel footprint."""
+
+    footprint: NDArray[np.bool_]
+    area_nm2: float
+    diameter_nm: float
+    maximum_height_nm: float
+    centered_height_nm: float
+    aspect_ratio: float
