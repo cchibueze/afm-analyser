@@ -35,8 +35,8 @@
 
 ## 4. Feature grouping and overlap
 
-- **REQ-030 — Same-type overlap:** Same-type footprints connected by 8-connectivity, including diagonal pixel contact, shall be treated as one entity. Same-type extrema whose grown footprints connect shall be combined.
-- **REQ-031 — Different-type overlap:** When footprints of different feature types overlap or touch under 8-connectivity, only the higher-priority whole feature shall be retained; the lower-priority whole feature shall be suppressed.
+- **REQ-030 — Same-type overlap:** Same-type footprints connected by 8-connectivity, including diagonal pixel contact, shall be treated as one entity. Same-type extrema whose grown footprints connect shall be combined. Recompute measurements from the combined footprint and apply feature thresholds to those measurements.
+- **REQ-031 — Different-type overlap:** For footprints of different feature types, calculate intersection-over-union from their projected XY areas using calibrated pixel pitches and edge-clipped pixel cells. When this ratio is at least 80%, retain only the higher-priority whole feature and suppress the lower-priority whole feature. Overlap below 80%, including contact without shared area, shall not cause suppression.
 - **REQ-032 — Initial priority:** The initial priority order shall be trench, then pit, then bump.
 - **REQ-033 — Future selection rules:** The selection rule shall be changeable in future work to allow other rules, such as selection based on physical prominence.
 
@@ -67,7 +67,7 @@
 - **AC-004:** Each reported feature has a type-specific index, and the results state the total count for each reported type.
 - **AC-005:** Trench results include length, width, and depth; bump results include projected area and maximum height; pit results include projected area and maximum depth.
 - **AC-006:** Measurements use the requested units, or the documented defaults if none are requested.
-- **AC-007:** Same-type footprints connected by 8-connectivity are reported as one entity; different-type overlaps or contacts suppress the lower-priority whole feature.
+- **AC-007:** Same-type footprints connected by 8-connectivity are reported as one entity. For different-type footprints, an intersection-over-union ratio of at least 80% suppresses the lower-priority whole feature; lower ratios retain both.
 - **AC-008:** A logfile contains errors, warnings, and progress reports; requested plots and optional operational details are produced.
 - **AC-009:** Scientific analysis output is not printed to the console; CLI diagnostics may be printed to standard error.
 - **AC-010 — Preprocessing and measurements:** Trench preprocessing replaces heights with absolute image-wide Z-score greater than 3 by the image-wide mean. Bump and pit preprocessing replaces heights that differ by more than 1000 nm from the mean of their centered 11×11-pixel neighborhood (excluding the point) with that local mean. Both paths then apply sigma-1-pixel Gaussian smoothing for detection and use the filtered, unsmoothed image for measurements.

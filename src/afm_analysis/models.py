@@ -103,3 +103,12 @@ class BumpResult:
     maximum_height_nm: float
     centered_height_nm: float
     aspect_ratio: float
+
+
+@dataclass(frozen=True)
+class SelectedCandidates:
+    """Selected results separated into feature-specific, centroid-ordered lists."""
+
+    trenches: list[TrenchResult]
+    pits: list[PitResult]
+    bumps: list[BumpResult]
