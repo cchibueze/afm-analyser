@@ -18,7 +18,7 @@ def _request(depth: float = 4.0, diameter: float = 4.0) -> EffectiveRequest:
     )
 
 
-def _pit_image(pitch_x: float = 1.0, pitch_y: float = 1.0) -> ImageData: #ASK CODEX
+def _pit_image(pitch_x: float = 1.0, pitch_y: float = 1.0) -> ImageData:
     size = 40
     rows, columns = np.indices((size, size))
     distance = np.hypot(

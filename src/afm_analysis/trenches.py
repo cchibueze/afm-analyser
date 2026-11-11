@@ -113,6 +113,8 @@ def analyze_trenches(image: ImageData, request: EffectiveRequest) -> list[Trench
                         length_nm=length,
                         width_nm=width,
                         depth_nm=depth,
+                        centroid_x_pixel=float(region.centroid[1] / image.pixel_pitch_x_nm),
+                        centroid_y_pixel=float(region.centroid[0] / image.pixel_pitch_y_nm),
                     ),
                 )
             )

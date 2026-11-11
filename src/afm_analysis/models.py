@@ -11,6 +11,24 @@ from numpy.typing import NDArray
 FloatArray = NDArray[np.float64]
 
 
+def _validate_centroid(
+    footprint: NDArray[np.bool_], centroid_x_pixel: float, centroid_y_pixel: float
+) -> None:
+    """Require finite centroid coordinates matching the footprint's pixel mean."""
+    if footprint.ndim != 2:
+        raise ValueError("feature footprint must be a two-dimensional array")
+    coordinates = np.argwhere(footprint)
+    if not len(coordinates):
+        raise ValueError("feature footprint must not be empty")
+    if not np.isfinite((centroid_x_pixel, centroid_y_pixel)).all():
+        raise ValueError("feature centroid coordinates must be finite")
+    expected_y, expected_x = coordinates.mean(axis=0)
+    if not np.isclose(centroid_x_pixel, expected_x, rtol=0.0, atol=1e-9) or not np.isclose(
+        centroid_y_pixel, expected_y, rtol=0.0, atol=1e-9
+    ):
+        raise ValueError("feature centroid must match the mean pixel indices of its footprint")
+
+
 class FeatureType(StrEnum):
     """Feature types supported by the initial analysis scope."""
 
@@ -79,6 +97,11 @@ class TrenchResult:
     length_nm: float
     width_nm: float
     depth_nm: float
+    centroid_x_pixel: float
+    centroid_y_pixel: float
+
+    def __post_init__(self) -> None:
+        _validate_centroid(self.footprint, self.centroid_x_pixel, self.centroid_y_pixel)
 
 
 @dataclass(frozen=True)
@@ -91,6 +114,11 @@ class PitResult:
     maximum_depth_nm: float
     centered_height_nm: float
     aspect_ratio: float
+    centroid_x_pixel: float
+    centroid_y_pixel: float
+
+    def __post_init__(self) -> None:
+        _validate_centroid(self.footprint, self.centroid_x_pixel, self.centroid_y_pixel)
 
 
 @dataclass(frozen=True)
@@ -103,6 +131,11 @@ class BumpResult:
     maximum_height_nm: float
     centered_height_nm: float
     aspect_ratio: float
+    centroid_x_pixel: float
+    centroid_y_pixel: float
+
+    def __post_init__(self) -> None:
+        _validate_centroid(self.footprint, self.centroid_x_pixel, self.centroid_y_pixel)
 
 
 @dataclass(frozen=True)

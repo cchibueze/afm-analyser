@@ -118,7 +118,17 @@ def _remeasure_trenches(
                 and width >= thresholds.width_nm
                 and depth >= thresholds.depth_nm
             ):
-                output.append(TrenchResult(footprint, length, width, depth))
+                centroid_y, centroid_x = _centroid(footprint)
+                output.append(
+                    TrenchResult(
+                        footprint,
+                        length,
+                        width,
+                        depth,
+                        centroid_x_pixel=centroid_x,
+                        centroid_y_pixel=centroid_y,
+                    )
+                )
     return output
 
 
@@ -152,6 +162,8 @@ def _remeasure_pits(
                     depth,
                     centered_extremum_height(footprint, filtered, highest=False),
                     aspect,
+                    centroid_x_pixel=_centroid(footprint)[1],
+                    centroid_y_pixel=_centroid(footprint)[0],
                 )
             )
     return output
@@ -187,6 +199,8 @@ def _remeasure_bumps(
                     height,
                     centered_extremum_height(footprint, filtered, highest=True),
                     aspect,
+                    centroid_x_pixel=_centroid(footprint)[1],
+                    centroid_y_pixel=_centroid(footprint)[0],
                 )
             )
     return output

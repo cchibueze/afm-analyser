@@ -41,15 +41,18 @@ def _request(
 
 
 def _trench(mask: np.ndarray) -> TrenchResult:
-    return TrenchResult(mask, 1, 1, 1)
+    centroid_y, centroid_x = np.argwhere(mask).mean(axis=0)
+    return TrenchResult(mask, 1, 1, 1, centroid_x, centroid_y)
 
 
 def _pit(mask: np.ndarray) -> PitResult:
-    return PitResult(mask, 999, 999, 999, 999, 999)
+    centroid_y, centroid_x = np.argwhere(mask).mean(axis=0)
+    return PitResult(mask, 999, 999, 999, 999, 999, centroid_x, centroid_y)
 
 
 def _bump(mask: np.ndarray) -> BumpResult:
-    return BumpResult(mask, 999, 999, 999, 999, 999)
+    centroid_y, centroid_x = np.argwhere(mask).mean(axis=0)
+    return BumpResult(mask, 999, 999, 999, 999, 999, centroid_x, centroid_y)
 
 
 def _select(

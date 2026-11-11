@@ -49,16 +49,16 @@ def analyze_pits(image: ImageData, request: EffectiveRequest) -> list[PitResult]
     prominent_minima = h_minima(
         detection,
         MINIMUM_SEED_PROMINENCE_NM,
-        footprint=footprint_rectangle((3, 3)), #ASK CODEX
+        footprint=footprint_rectangle((3, 3)),
     )
     seed_mask = minima & prominent_minima
 
-    gradient_y, gradient_x = np.gradient( #ASK CODEX
+    gradient_y, gradient_x = np.gradient(
         detection,
         image.pixel_pitch_y_nm,
         image.pixel_pitch_x_nm,
     )
-    slope = np.hypot(gradient_x, gradient_y) #ASK CODEX
+    slope = np.hypot(gradient_x, gradient_y)
     candidates = merge_seed_footprints(
         seed_mask,
         slope,
@@ -98,6 +98,8 @@ def analyze_pits(image: ImageData, request: EffectiveRequest) -> list[PitResult]
                         footprint, filtered, highest=False
                     ),
                     aspect_ratio=aspect_ratio,
+                    centroid_x_pixel=float(region.centroid[1] / image.pixel_pitch_x_nm),
+                    centroid_y_pixel=float(region.centroid[0] / image.pixel_pitch_y_nm),
                 ),
             )
         )

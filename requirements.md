@@ -15,7 +15,7 @@
 - **REQ-012 — Supported input units:** The initial production implementation shall support meters and nanometers for physical image dimensions and height data.
 - **REQ-013 — Request file:** The initial version shall accept operator requests through a `.inp` text file containing lines with keywords and optional specifications.
 - **REQ-014 — Feature requests:** The request file shall allow the operator to specify wanted feature types and feature-specific thresholds.
-- **REQ-015 — Output requests:** The request file shall allow the operator to request output detail, plots, inclusion of analysis details in the results file, and result measurement units where applicable.
+- **REQ-015 — Output requests:** Later request-file support shall allow the operator to request output detail, plots, inclusion of analysis details in the results file, and result measurement units where applicable.
 - **REQ-016 — Feature default:** If feature types are omitted, the program shall look for trenches only.
 - **REQ-017 — Default trench thresholds:** Unless overridden, the trench thresholds shall be 5 nm depth, 3 nm width, and 6 nm length. The requested trench length threshold shall be at least 1.5 times the requested trench width threshold.
 - **REQ-018 — Default bump and pit thresholds:** Unless overridden, bump thresholds shall be 4 nm minimum height and 4 nm diameter; pit thresholds shall be 4 nm minimum depth and 4 nm diameter.
@@ -31,7 +31,7 @@
 - **REQ-025 — Bump measurements and shape:** For each reported bump, results shall include projected area and maximum height relative to the local reference. Projected area shall be the footprint pixel-cell count times calibrated pixel pitch in both axes, with cells clipped at image edges. The minimum-diameter threshold shall use equivalent-area diameter, 2 × sqrt(area / π). The aspect ratio, calculated as the region-moment major axis divided by its minor axis, shall be below 1.5. Centered height for reference cases shall be the average filtered height in a 3×3 window around the highest pixel, including that pixel; at an image edge, use available window pixels.
 - **REQ-026 — Pit definition and boundary:** A pit is a locally lower region with a projected shape similar to a bump. Identify seeds using both `local_minima` and `h_minima` on the detection image, with h = 4.8 nm. Grow outward using slope calculated from one-pixel finite differences with calibrated physical pixel spacing. After the steep flank, the first outward location where slope falls below 20% grade marks the boundary. Retain the seed-connected interior even where its slope is low; stop at the first below-threshold crossing even if slope later increases.
 - **REQ-027 — Pit measurements and shape:** For each reported pit, results shall include projected area and maximum depth relative to the local reference. Projected area shall be the footprint pixel-cell count times calibrated pixel pitch in both axes, with cells clipped at image edges. The minimum-diameter threshold shall use equivalent-area diameter, 2 × sqrt(area / π). The aspect ratio, calculated as the region-moment major axis divided by its minor axis, shall be below 1.5. Centered height for reference cases shall be the average filtered height in a 3×3 window around the lowest pixel, including that pixel; at an image edge, use available window pixels.
-- **REQ-028 — Measurement units:** Feature measurements shall default to nanometers; projected area shall default to nm². The operator may request other result units.
+- **REQ-028 — Measurement units:** Feature measurements shall be reported in nanometers and projected area in nm². User-defined result-unit conversion is staged for later product versions.
 
 ## 4. Feature grouping and overlap
 
@@ -43,13 +43,13 @@
 ## 5. Results, logs, and plots
 
 - **REQ-040 — Results file:** Each analysis shall produce a plain-text results file.
-- **REQ-041 — Per-feature results:** Results shall identify each feature by type and an index within its type, report the total number of detected features of each type, and include the required measurements.
+- **REQ-041 — Per-feature results:** Results shall identify each feature by type and an index within its type, report the total number of detected features of each type, include the required measurements, and report each feature centroid as zero-based x/y pixel indices and x/y coordinates in nm. The result summary shall include image dimensions in rows and columns and physical X/Y extents in nm.
 - **REQ-042 — Calculation summary:** The results file shall include the operator’s specified calculation choices.
 - **REQ-043 — Analysis details:** The results file shall identify where the logfile can be found. Analysis details mean operational information such as errors, warnings, and progress reports; they do not mean additional scientific calculations or feature measurements.
 - **REQ-044 — Log file:** Errors, warnings, and progress reports shall be recorded in a plain-text logfile.
 - **REQ-045 — Optional details in results:** When requested, operational analysis details (errors, warnings, and progress reports) may also be included in the results file.
 - **REQ-046 — Plots:** When requested, plots shall be generated as additional files.
-- **REQ-047 — Console output:** The initial version shall not print scientific analysis output to the console. CLI diagnostics and logfile setup or writing failures may be printed to standard error; scientific results shall be written to an output file in a later increment.
+- **REQ-047 — Console output:** The initial version shall not print scientific analysis output to the console. CLI diagnostics and logfile setup or writing failures may be printed to standard error. A plain-text result writer is implemented; connecting it to the complete CLI analysis run is planned for a later increment.
 - **REQ-048 — Confidence values deferred:** The initial version shall not calculate or report confidence values. Future work may add separate confidence measures for whether a region is an actual feature and whether it is of interest.
 
 ## 6. Usability and scientific constraints
@@ -66,7 +66,7 @@
 - **AC-003:** When no thresholds are specified, the documented default thresholds are applied in nanometers. The defaults give a trench length-to-width ratio of 2.0, and every accepted trench threshold configuration satisfies the minimum ratio of 1.5.
 - **AC-004:** Each reported feature has a type-specific index, and the results state the total count for each reported type.
 - **AC-005:** Trench results include length, width, and depth; bump results include projected area and maximum height; pit results include projected area and maximum depth.
-- **AC-006:** Measurements use the requested units, or the documented defaults if none are requested.
+- **AC-006:** Measurements are reported in nm and projected area in nm²; user-defined result-unit conversion is deferred to later product versions.
 - **AC-007:** Same-type footprints connected by 8-connectivity are reported as one entity. For different-type footprints, an intersection-over-union ratio of at least 80% suppresses the lower-priority whole feature; lower ratios retain both.
 - **AC-008:** A logfile contains errors, warnings, and progress reports; requested plots and optional operational details are produced.
 - **AC-009:** Scientific analysis output is not printed to the console; CLI diagnostics may be printed to standard error.
@@ -80,8 +80,7 @@
 These details are not yet specified and should remain open rather than be guessed:
 
 - The exact syntax and supported keywords for `.inp` files.
-- Whether results should include a feature’s location or pixel coordinates; these are not yet specified.
-- The exact text layout and meaning of output detail levels.
+- The meaning of output detail levels.
 - Which plots are required and what they should show.
 - What constitutes an error versus a warning, and how invalid or incomplete inputs should be reported.
 - What installation environments should be supported.

@@ -18,7 +18,7 @@ def _request(height: float = 4.0, diameter: float = 4.0) -> EffectiveRequest:
     )
 
 
-def _bump_image(pitch_x: float = 1.0, pitch_y: float = 1.0) -> ImageData: #ASK CODEX
+def _bump_image(pitch_x: float = 1.0, pitch_y: float = 1.0) -> ImageData:
     size = 40
     rows, columns = np.indices((size, size))
     distance = np.hypot(
@@ -104,7 +104,7 @@ def test_measurements_are_rotation_invariant_with_anisotropic_spacing() -> None:
     )
 
 
-def test_edge_pixel_cells_are_clipped_to_field_of_view() -> None: #ASK CODEX
+def test_edge_pixel_cells_are_clipped_to_field_of_view() -> None:
     footprint = np.ones((3, 4), dtype=bool)
 
     assert projected_area(footprint, pitch_x=2.0, pitch_y=3.0) == pytest.approx(36.0)

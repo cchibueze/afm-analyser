@@ -10,11 +10,11 @@ The approved scientific definitions are recorded in `requirements.md`. Productio
 
 ## 2. Design summary
 
-The production code uses a `src`-layout Python package, with tests under `tests/` and project configuration in `pyproject.toml`. Keep modules focused on the agreed responsibilities and add them as their interfaces are implemented. The exploratory scripts remain in `prototypes/` and are not the production architecture. The initial request increment defines feature and threshold models in `models.py` and request validation/defaults in `requests.py`; later increments can add input, analysis, reporting, selection, and output modules as their contracts are agreed.
+The production code uses a `src`-layout Python package, with tests under `tests/` and project configuration in `pyproject.toml`. Keep modules focused on the agreed responsibilities. The package currently includes request models and validation, CSV input, feature analysis and selection, operational reporting, and a plain-text results writer. The CLI still needs to connect these stages into a complete run; `.inp` parsing and plots are also future work. Exploratory scripts remain in `prototypes/` and are not the production architecture.
 
 Keep scientific calculations separate from file parsing and report formatting. Use explicit data passed between stages rather than making analysis depend on CSV/INP syntax or output paths. Set up operational reporting at the beginning of a run so progress, warnings, and errors can be recorded throughout input handling and analysis. Write final results and requested plots when the relevant analysis data is available.
 
-Use nanometers (nm) and square nanometers (nm²) as internal units. Convert supported input measurements and thresholds to these units when reading/validating inputs, and convert feature measurements to requested result units when writing results.
+Use nanometers (nm) and square nanometers (nm²) as internal and current result units. User-defined result-unit conversion is staged for later product versions.
 
 ## 3. Responsibilities and boundaries
 
@@ -38,9 +38,9 @@ Do not introduce a general detector interface, plugin registry, dependency-injec
 The following are conceptual values passed between stages. Their final Python representation and exact fields depend on the file-format and scientific decisions that remain open.
 
 - **Image data:** a 2D grid of measured surface heights plus metadata describing pixel dimensions, physical width and row-axis length, and stated units. CSV metadata rows use `# Key,value`; the required keys are `ImageWidth`, `ImageHeight`, `ImageWidthPixel`, `ImageHeightPixel`, and `ImageDataUnit`. Blank lines and comment rows may precede the matrix; the first non-comment row begins it, and comments after that point are invalid. The declared unit (`m` or `nm`) applies to both extents and all matrix heights. Width and height are the physical extents along the matrix column and row axes. Each extent runs from the first through last grid point, so pitch is extent divided by pixel count minus one; pixel counts must be at least two, and matrix dimensions must match the declared counts. The physical row-axis extent is represented internally as `length_nm`, distinct from the per-point `heights_nm` values. Analysis receives calibrated physical spacing and heights in nm.
-- **Parsed request:** operator-specified feature types, thresholds, result units, detail level, plot request, and whether operational details should also appear in the results file.
+- **Parsed request:** operator-specified feature types, thresholds, detail level, plot request, and whether operational details should also appear in the results file. User-defined result-unit selection is staged for later product versions.
 - **Effective request:** validated request with documented defaults applied. Thresholds are represented in nm; area values use nm². The local-reference shell is fixed at 11×11 pixels in the initial implementation; operator configuration is deferred to a future increment. Bump and pit thresholds have separate models so their fields and behavior can evolve independently.
-- **Feature candidate/result:** feature type, region representation, and required measurements. The region representation must support agreed grouping and overlap decisions. Whether results include location or pixel coordinates remains open.
+- **Feature candidate/result:** feature type, region representation, required measurements, and centroid coordinates. Results report the centroid as zero-based x/y pixel indices and x/y coordinates in nm, together with the image dimensions in rows and columns and physical X/Y extents in nm. The result writer receives its output path from its caller; the current run logfile path is `results/run.log`.
 - **Run reporter:** a lightweight way for stages to record progress, warnings, and errors as the run proceeds. It should be initialized by the CLI and passed explicitly to stages that need to report. Scientific code should not write directly to files or know logfile formatting.
 - **Analysis result:** selected features and their measurements, together with enough effective-request information to describe calculation choices in the results file.
 
@@ -73,7 +73,7 @@ Run reporter ──> logfile throughout the run
              └─> results file too, when requested
 ```
 
-The results file is written when sufficient analysis data is available. The logfile is written during the run, so operational information is preserved even if later analysis or output fails. Scientific analysis output is not printed to the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error. Scientific results are written to an output file in a later increment. CLI exit behavior remains to be specified.
+The plain-text result writer is implemented and accepts its output path from its caller. The CLI analysis pipeline still needs to connect analysis results to that writer. The logfile is written during the run at `results/run.log`, so operational information is preserved even if later analysis or output fails. Scientific analysis output is not printed to the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error. CLI exit behavior remains to be specified.
 
 ## 6. Scientific analysis and overlap rules
 
@@ -125,12 +125,10 @@ Carrying varied units through scientific calculations would increase conversion 
 
 The following are not resolved by this design and must not be silently guessed during implementation:
 
-1. **INP grammar:** Keywords, optional values, duplicate requests, malformed input behavior, and exact output-detail choices.
-2. **Result units:** Units beyond the nm and nm² defaults and area conversion rules remain to be specified. Internal units are nm and nm².
-3. **Reported location:** Whether each feature needs coordinates, a bounding region, or another location description.
-4. **Outputs:** Exact results layout, meaning of detail levels, required plot types/content, filenames, and behavior on partial output failure.
-5. **Operational behavior:** Error versus warning definitions, logfile format, handling of invalid/incomplete files, and CLI exit codes. Scientific analysis output stays off the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error.
-6. **Environment and validation:** Python 3.13 and later are supported; the installation environment and additional independent scientific validation datasets/tolerances remain to be specified. The approved reference cases and expected ranges are in `requirements.md`.
+1. **INP grammar:** Keywords, optional values, duplicate requests, and malformed input behavior.
+2. **Outputs:** Meaning of detail levels, required plot types/content, and behavior on partial output failure.
+3. **Operational behavior:** Error versus warning definitions, logfile format, handling of invalid/incomplete files, and CLI exit codes. Scientific analysis output stays off the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error.
+4. **Environment and validation:** Python 3.13 and later are supported; the installation environment and additional independent scientific validation datasets/tolerances remain to be specified. The approved reference cases and expected ranges are in `requirements.md`.
 
 The largest risk is treating algorithmic choices as implementation details when they affect scientific meaning. Those choices should be documented and checked against reference data before claims of scientific correctness.
 
@@ -142,7 +140,7 @@ The largest risk is treating algorithmic choices as implementation details when 
 4. Implement the approved scientific definitions and validate each feature path against the reference examples in `requirements.md`; add independent scientific reference data when supplied.
 5. Implement same-type grouping and cross-type priority using 8-connectivity, the approved 80% intersection-over-union cutoff, whole-feature suppression, and feature-specific centroid-ordered outputs.
 6. Add lightweight operational reporting to the CLI and pass the reporter explicitly to pipeline stages as they are implemented. Write progress, warnings, and errors to a plain-text logfile; allow CLI diagnostics and logfile failures on standard error while keeping scientific analysis output off the console.
-7. Add results output once sufficient analysis data is available, including the logfile location and optional operational details; then add requested plots.
+7. Connect the implemented results writer to the CLI analysis pipeline with the selected result path and logfile location; add requested plots in a later increment.
 8. Run end-to-end CLI checks and compare scientific outputs to the supplied reference data.
 9. Add or refine modules only where implemented responsibilities or independent testing needs justify those boundaries.
 
