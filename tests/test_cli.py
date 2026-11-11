@@ -94,19 +94,32 @@ def test_cli_invalid_request_returns_two_and_reports_error(
 
 
 def test_cli_success_returns_zero_without_console_output(
-    capsys: pytest.CaptureFixture[str],
+    tmp_path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
 ) -> None:
-    assert main(["--path", "image.csv"]) == 0
+    monkeypatch.chdir(tmp_path)
+    image = tmp_path / "image.csv"
+    image.write_text(
+        "# ImageWidth,4\n# ImageHeight,4\n# ImageWidthPixel,3\n"
+        "# ImageHeightPixel,3\n# ImageDataUnit,nm\n0,0,0\n0,0,0\n0,0,0\n",
+        encoding="utf-8",
+    )
+    assert main(["--path", str(image), "--features", "bump", "--bump-height-nm", "100"]) == 0
 
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
+    assert (tmp_path / "results" / "output").is_file()
+    assert (tmp_path / "results" / "output.log").is_file()
+    assert not (tmp_path / "results" / "output.png").exists()
 
 
 def test_cli_returns_two_when_reporter_write_fails(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     class FailingReporter:
+        def __init__(self, log_path=None) -> None:
+            self.log_path = log_path
+
         def __enter__(self) -> FailingReporter:
             return self
 
@@ -121,3 +134,5 @@ def test_cli_returns_two_when_reporter_write_fails(
 
     assert main(["--path", "image.csv"]) == 2
     assert capsys.readouterr().err.count("Unable to write to run logfile") == 1
+
+

@@ -26,9 +26,9 @@ class _RaisingFileHandler(logging.FileHandler):
 class RunReporter:
     """Write progress, warnings, and errors to the run logfile."""
 
-    def __init__(self) -> None:
+    def __init__(self, log_path: str | Path | None = None) -> None:
         project_root = Path(__file__).resolve().parents[2]
-        log_path = project_root / "results" / "run.log"
+        log_path = Path(log_path) if log_path is not None else project_root / "results" / "run.log"
         logger = logging.Logger(f"afm_analysis.run.{id(self)}", level=logging.INFO)
         logger.propagate = False
         try:

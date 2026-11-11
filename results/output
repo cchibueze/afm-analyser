@@ -1,0 +1,20 @@
+AFM Analysis Results
+Image dimensions: 500 rows × 500 columns
+Image size: X=499 nm, Y=499 nm
+Log file: results/output.log
+
+Calculation choices
+Feature types: pit
+Pit thresholds: depth >= 4 nm, diameter >= 4 nm
+
+Counts
+Trenches: 0
+Pits: 1
+Bumps: 0
+
+Trenches
+
+Pits
+Pit 1: centroid x=248.309, y=247.447 pixels (0-based); x=248.309 nm, y=247.447 nm; projected area=291 nm², maximum depth=7.50003 nm
+
+Bumps

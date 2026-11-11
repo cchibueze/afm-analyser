@@ -1,15 +1,23 @@
-"""Command-line interface for validating AFM analysis requests."""
+"""Command-line interface for AFM image analysis."""
 
 from __future__ import annotations
 
 import argparse
+import shutil
 import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from afm_analysis.bumps import analyze_bumps
+from afm_analysis.csv_reader import read_csv
 from afm_analysis.models import EffectiveRequest, FeatureType
+from afm_analysis.pits import analyze_pits
+from afm_analysis.plotting import write_overview_plot
 from afm_analysis.reporting import ReportingError, RunReporter
 from afm_analysis.requests import Request, validate_request
+from afm_analysis.results_writer import ResultsWriteError, write_results
+from afm_analysis.selection import select_candidates
+from afm_analysis.trenches import analyze_trenches
 
 
 def _feature_list(value: str) -> list[str]:
@@ -25,7 +33,7 @@ def _feature_list(value: str) -> list[str]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the argument parser for the request-validation CLI."""
+    """Build the argument parser for the analysis CLI."""
     parser = argparse.ArgumentParser(prog="afm-analysis")
     parser.add_argument(
         "--path",
@@ -47,6 +55,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--bump-diameter-nm", type=float)
     parser.add_argument("--pit-depth-nm", type=float)
     parser.add_argument("--pit-diameter-nm", type=float)
+    parser.add_argument("--output", type=Path, default=Path("results/output"), metavar="PATH")
+    parser.add_argument("--plot", action="store_true", help="write an overview PNG")
+    parser.add_argument(
+        "--include-details", action="store_true", help="include operational details in results"
+    )
     return parser
 
 
@@ -82,26 +95,68 @@ def request_from_args(args: argparse.Namespace) -> EffectiveRequest:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Validate an operator request; analysis is intentionally not run here."""
+    """Run the requested analysis and write its outputs."""
     parser = build_parser()
     args = parser.parse_args(argv)
+    output_path: Path = args.output
+    results_dir = Path("results")
+    log_path = results_dir / f"{output_path.stem}.log"
+    plot_path = results_dir / f"{output_path.stem}.png"
     try:
-        reporter = RunReporter()
+        results_dir.mkdir(parents=True, exist_ok=True)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        reporter = RunReporter(log_path)
     except ReportingError:
+        return 2
+    except OSError as error:
+        print(f"{parser.prog}: error: unable to prepare output paths: {error}", file=sys.stderr)
         return 2
     try:
         with reporter:
             reporter.progress("Run started")
             try:
-                request_from_args(args)
-            except ValueError as error:
-                print(f"{parser.prog}: error: {error}", file=sys.stderr)
-                reporter.error(str(error))
+                request = request_from_args(args)
+                reporter.progress(f"Reading image CSV: {args.path}")
+                image = read_csv(args.path)
+                trenches = analyze_trenches(image, request) if request.trench_thresholds else []
+                pits = analyze_pits(image, request) if request.pit_thresholds else []
+                bumps = analyze_bumps(image, request) if request.bump_thresholds else []
+                selected = select_candidates(image, request, trenches, pits, bumps)
+                reporter.progress("Analysis and feature selection complete")
+                details = (
+                    log_path.read_text(encoding="utf-8").splitlines()
+                    if args.include_details
+                    else None
+                )
+                try:
+                    write_results(output_path, image, request, selected, log_path, details)
+                except ResultsWriteError:
+                    _preserve_partial_output(output_path)
+                    raise
+                if args.plot:
+                    write_overview_plot(plot_path, image, selected)
+                reporter.progress("Run completed")
+            except (ImportError, OSError, ValueError, RuntimeError) as error:
+                message = str(error)
+                print(f"{parser.prog}: error: {message}", file=sys.stderr)
+                reporter.error(message)
                 return 2
     except ReportingError:
         # The reporter has already printed its failure diagnostic to stderr.
         return 2
     return 0
+
+
+def _preserve_partial_output(path: Path) -> None:
+    """Copy a partial results file to its crash artifact and remove the original."""
+    if not path.exists():
+        return
+    crash_path = Path("results") / f"{path.stem}.crash"
+    try:
+        shutil.copyfile(path, crash_path)
+        path.unlink()
+    except OSError as error:
+        print(f"afm-analysis: error: unable to preserve partial output: {error}", file=sys.stderr)
 
 
 if __name__ == "__main__":
