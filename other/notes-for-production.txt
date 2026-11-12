@@ -6,8 +6,5 @@ For your project, I would distinguish three levels:
 
 Planned work:
 .inp request-file parsing.
-Connecting the CLI to image reading, analysis, and results.
-Cross-type overlap selection by priority, plus tests for feature merging and selection.
-Results output, requested-unit conversion, and plots.
 Operator configuration of the local-reference shell.
 Additional independent scientific validation data.
