@@ -12,7 +12,7 @@ from trench_detection_prototype import (
 )
 
 
-DATASET = Path(__file__).resolve().parents[2] / "data" / "trenches.csv"
+DATASET = Path(__file__).resolve().parents[2] / "data" / "two-trenches.csv"
 
 
 def test_supplied_csv_loads_with_agreed_pixel_spacing() -> None:
@@ -50,7 +50,7 @@ def test_global_segmentation_is_rotation_symmetric() -> None:
     )
 
 
-def test_actual_dataset_produces_three_candidates() -> None:
+def test_actual_dataset_produces_two_candidates() -> None:
     image = load_afm_csv(DATASET)
     mask, threshold_nm = detect_candidate_mask(image.heights_nm)
     trenches = measure_trenches(
@@ -60,10 +60,10 @@ def test_actual_dataset_produces_three_candidates() -> None:
         image.spacing_j_nm,
     )
 
-    assert 10.0 < threshold_nm < 20.0
-    assert len(trenches) == 3
-    assert all(45.0 <= feature.width_nm <= 55.0 for feature in trenches)
-    assert all(25.0 <= feature.depth_nm <= 35.0 for feature in trenches)
+    assert 5.0 < threshold_nm < 10.0
+    assert len(trenches) == 2
+    assert all(65.0 <= feature.width_nm <= 75.0 for feature in trenches)
+    assert all(40.0 <= feature.depth_nm <= 50.0 for feature in trenches)
     assert all(500.0 <= feature.visible_length_nm <= 502.0 for feature in trenches)
     assert [feature.center_j for feature in trenches] == sorted(
         feature.center_j for feature in trenches

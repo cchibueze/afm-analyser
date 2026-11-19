@@ -71,7 +71,7 @@
 - **AC-008:** A logfile contains errors, warnings, and progress reports; requested plots and optional operational details are produced.
 - **AC-009:** Scientific analysis output is not printed to the console; CLI diagnostics may be printed to standard error.
 - **AC-010 — Preprocessing and measurements:** Trench preprocessing replaces heights with absolute image-wide Z-score greater than 3 by the image-wide mean. Bump and pit preprocessing replaces heights that differ by more than 1000 nm from the mean of their centered 11×11-pixel neighborhood (excluding the point) with that local mean. Both paths then apply sigma-1-pixel Gaussian smoothing for detection and use the filtered, unsmoothed image for measurements.
-- **AC-011 — Trench reference case:** On `data/trenches.csv`, analysis identifies 3 horizontal, somewhat skewed trenches; each has width 45–55 nm and length 501–503 nm, and their mean depth is 28–32 nm.
+- **AC-011 — Trench reference case:** On `data/two-trenches.csv`, analysis identifies 2 horizontal, somewhat skewed, parallel trenches spanning the image; each has width 70–78 nm and length 501–503 nm, and their mean depth is 42–47 nm. These dimensions are approximately 1.5 times those of the original three-trench reference case, which remains preserved in `data/trenches.csv`.
 - **AC-012 — Bump reference case:** On `data/bump.csv`, the centered noisy bump measures 18–22 nm in equivalent-area diameter, has 3×3 centered height 3–7 nm, and aspect ratio below 1.5.
 - **AC-013 — Pit reference case:** On `data/pit.csv`, the centered noisy pit measures 18–22 nm in equivalent-area diameter, has 3×3 minimum-centered height −2 to +2 nm, and aspect ratio below 1.5.
 

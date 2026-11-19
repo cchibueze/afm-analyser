@@ -105,7 +105,7 @@ def test_rejects_invalid_csv(content: str, message: str, tmp_path: Path) -> None
 
 
 def test_supplied_sample_has_one_nanometer_pixel_pitch() -> None:
-    sample = Path(__file__).parents[1] / "data" / "trenches.csv"
+    sample = Path(__file__).parents[1] / "data" / "two-trenches.csv"
 
     image = read_csv(sample)
 

@@ -5,7 +5,7 @@ import pytest
 from trench_detection_skimage import Trench, load_afm_csv, measure_trenches, segment_low_regions
 
 
-DATASET = Path(__file__).resolve().parents[2] / "data" / "trenches.csv"
+DATASET = Path(__file__).resolve().parents[2] / "data" / "two-trenches.csv"
 
 
 def analyze(
@@ -46,15 +46,15 @@ def test_regionprops_detection_is_rotation_symmetric() -> None:
     )
 
 
-def test_regionprops_rectangular_estimates_match_supplied_sample() -> None:
+def test_regionprops_rectangular_estimates_match_two_trench_sample() -> None:
     image = load_afm_csv(DATASET)
     threshold, trenches = analyze(image.heights_nm, image.spacing_i_nm, image.spacing_j_nm)
 
-    assert 10.0 < threshold < 20.0
-    assert len(trenches) == 3
-    assert all(45.0 <= feature.width_nm <= 55.0 for feature in trenches)
+    assert 5.0 < threshold < 10.0
+    assert len(trenches) == 2
+    assert all(70.0 <= feature.width_nm <= 80.0 for feature in trenches)
     assert all(500.0 <= feature.length_nm <= 504.0 for feature in trenches)
-    assert all(25.0 <= feature.depth_nm <= 35.0 for feature in trenches)
+    assert all(40.0 <= feature.depth_nm <= 50.0 for feature in trenches)
     assert [feature.center_j for feature in trenches] == sorted(
         feature.center_j for feature in trenches
     )

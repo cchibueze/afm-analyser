@@ -211,3 +211,4 @@ __marimo__/
 *.pyold
 *.json
 *.png
+*.private

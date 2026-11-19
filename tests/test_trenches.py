@@ -36,15 +36,15 @@ def _synthetic_trench() -> ImageData:
     return _image(heights, pitch_x=2.0, pitch_y=1.5)
 
 
-def test_supplied_reference_dataset_matches_approved_ranges() -> None:
-    image = read_csv(Path(__file__).parents[1] / "data" / "trenches.csv")
+def test_two_trench_reference_dataset_matches_approved_ranges() -> None:
+    image = read_csv(Path(__file__).parents[1] / "data" / "two-trenches.csv")
 
     trenches = analyze_trenches(image, _request())
 
-    assert len(trenches) == 3
-    assert all(45.0 <= trench.width_nm <= 55.0 for trench in trenches)
+    assert len(trenches) == 2
+    assert all(70.0 <= trench.width_nm <= 78.0 for trench in trenches)
     assert all(501.0 <= trench.length_nm <= 503.0 for trench in trenches)
-    assert 28.0 <= np.mean([trench.depth_nm for trench in trenches]) <= 32.0
+    assert 42.0 <= np.mean([trench.depth_nm for trench in trenches]) <= 47.0
     assert all(trench.footprint.shape == image.heights_nm.shape for trench in trenches)
 
 
