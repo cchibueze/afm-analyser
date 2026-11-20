@@ -212,3 +212,6 @@ __marimo__/
 *.json
 *.png
 *.private
+*output
+*datalinks.txt
+*notes-for-production.txt
