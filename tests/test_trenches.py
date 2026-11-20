@@ -41,7 +41,7 @@ def test_two_trench_reference_dataset_matches_approved_ranges() -> None:
 
     trenches = analyze_trenches(image, _request())
 
-    assert len(trenches) == 3
+    assert len(trenches) == 2
     assert all(70.0 <= trench.width_nm <= 78.0 for trench in trenches)
     assert all(501.0 <= trench.length_nm <= 503.0 for trench in trenches)
     assert 42.0 <= np.mean([trench.depth_nm for trench in trenches]) <= 47.0
