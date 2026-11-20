@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "afm-analysis"
-version = "0.1.0"
+version = "0.1.1"
 description = "Analysis tools for AFM chip-wafer surface data"
 requires-python = ">=3.13"
 dependencies = ["numpy>=2.1", "scipy>=1.14", "scikit-image>=0.24", "matplotlib>=3.9"]
