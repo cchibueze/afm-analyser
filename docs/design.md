@@ -2,11 +2,11 @@
 
 ## 1. Purpose and scope
 
-This document describes the initial software design for the requirements in `requirements.md`. It covers a command-line Python program that reads a general AFM height-table CSV and an operator request file, analyzes a 2D height grid, and writes requested results and operational outputs.
+This document describes the initial software design for the requirements in [`requirements.md`](requirements.md). It covers a command-line Python program that reads a general AFM height-table CSV and an operator request file, analyzes a 2D height grid, and writes requested results and operational outputs.
 
 The initial scope is trenches, pits, and bumps. A GUI, 3D or stacked-wafer data, confidence values, vendor-specific input formats, and a general plugin system are outside the initial design.
 
-The approved scientific definitions are recorded in `requirements.md`. Production analysis should implement those definitions and validate them against the approved reference cases. Exploratory prototypes remain evidence about possible techniques, not authoritative scientific behavior unless a rule was explicitly adopted.
+The approved scientific definitions are recorded in [`requirements.md`](requirements.md). Production analysis should implement those definitions and validate them against the approved reference cases. Exploratory prototypes remain evidence about possible techniques, not authoritative scientific behavior unless a rule was explicitly adopted.
 
 ## 2. Design summary
 
@@ -77,7 +77,7 @@ The plain-text result writer is implemented and accepts its output path from its
 
 ## 6. Scientific analysis and overlap rules
 
-Candidate analysis shall follow the approved scientific rules in `requirements.md`:
+Candidate analysis shall follow the approved scientific rules in [`requirements.md`](requirements.md):
 
 - Preprocess trenches by replacing heights with absolute image-wide Z-score greater than 3 by the image-wide mean. For bumps and pits, replace heights that differ by more than 1000 nm from the mean of their centered 11×11-pixel neighborhood with that local mean; exclude the point being filtered and use available neighborhood pixels at image edges. Apply Gaussian smoothing at sigma 1 pixel after filtering. Use the filtered-and-smoothed image for detection, and the filtered, unsmoothed image for measurements. Bump and pit gradients use one-pixel differences with calibrated physical pixel spacing; trench detection need not calculate gradients.
 - Use a fixed 11×11-pixel shell for each candidate's local reference in the initial implementation; operator configuration is deferred to a future increment. Exclude footprint points, retain shell values at or above the image-wide median, and average them. If none remain, use the median of the filtered image. This applies to all feature types.
@@ -128,7 +128,7 @@ The following are not resolved by this design and must not be silently guessed d
 1. **INP grammar:** Keywords, optional values, duplicate requests, and malformed input behavior.
 2. **Outputs:** Meaning of detail levels, required plot types/content, and behavior on partial output failure.
 3. **Operational behavior:** Error versus warning definitions, logfile format, handling of invalid/incomplete files, and CLI exit codes. Scientific analysis output stays off the console; CLI diagnostics and logfile setup or writing failures may be printed to standard error.
-4. **Environment and validation:** Python 3.13 and later are supported; the installation environment and additional independent scientific validation datasets/tolerances remain to be specified. The approved reference cases and expected ranges are in `requirements.md`.
+4. **Environment and validation:** Python 3.13 and later are supported; the installation environment and additional independent scientific validation datasets/tolerances remain to be specified. The approved reference cases and expected ranges are in [`requirements.md`](requirements.md).
 
 The largest risk is treating algorithmic choices as implementation details when they affect scientific meaning. Those choices should be documented and checked against reference data before claims of scientific correctness.
 
@@ -137,7 +137,7 @@ The largest risk is treating algorithmic choices as implementation details when 
 1. Agree CSV and INP formats, external units, invalid-input behavior, and CLI output/exit conventions.
 2. Build the production package incrementally, with explicit data passed between input, analysis, selection, reporting, and output responsibilities. Keep exploratory prototypes separate.
 3. Implement request models, validation, and documented defaults; test those defaults and validation rules. Add file parsing only after its syntax is agreed.
-4. Implement the approved scientific definitions and validate each feature path against the reference examples in `requirements.md`; add independent scientific reference data when supplied.
+4. Implement the approved scientific definitions and validate each feature path against the reference examples in [`requirements.md`](requirements.md); add independent scientific reference data when supplied.
 5. Implement same-type grouping and cross-type priority using 8-connectivity, the approved 80% intersection-over-union cutoff, whole-feature suppression, and feature-specific centroid-ordered outputs.
 6. Add lightweight operational reporting to the CLI and pass the reporter explicitly to pipeline stages as they are implemented. Write progress, warnings, and errors to a plain-text logfile; allow CLI diagnostics and logfile failures on standard error while keeping scientific analysis output off the console.
 7. Connect the implemented results writer to the CLI analysis pipeline with the selected result path and logfile location; add requested plots in a later increment.

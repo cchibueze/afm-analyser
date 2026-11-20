@@ -134,5 +134,5 @@ GitHub Actions runs pytest and Ruff for Python 3.13 and 3.14 on pushes to `main`
 
 ## Project documents
 
-- [`requirements.md`](requirements.md) describes product requirements and scientific reference expectations.
-- [`design.md`](design.md) describes the initial software design and planned boundaries.
+- [`requirements.md`](docs/requirements.md) describes product requirements and scientific reference expectations.
+- [`design.md`](docs/design.md) describes the initial software design and planned boundaries.
